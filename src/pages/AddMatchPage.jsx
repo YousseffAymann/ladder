@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import PageTransition from '../components/PageTransition.jsx';
 import SetScoreInput from '../components/SetScoreInput.jsx';
 import MatchModal from '../components/MatchModal.jsx';
@@ -10,11 +10,17 @@ import { Plus, X } from 'lucide-react';
 
 export default function AddMatchPage() {
   const { user } = useAuth();
-  const { submitMatch, users } = useLeague();
+  const { submitMatch, users, tournaments } = useLeague();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tournamentId = searchParams.get('tournament');
+  const tournament = tournamentId ? tournaments.find(t => t.id === tournamentId) : null;
   
   // Exclude current user from opponents list
-  const opponentIds = Object.keys(users).filter(id => id !== user?.id);
+  const allOpponentIds = tournament 
+    ? tournament.players.filter(id => id !== user?.id)
+    : Object.keys(users).filter(id => id !== user?.id);
+  const opponentIds = allOpponentIds;
   const [opponentId, setOpponentId] = useState(opponentIds[0] || '');
   
   useEffect(() => {
@@ -41,7 +47,7 @@ export default function AddMatchPage() {
     const activeSets = sets.filter(s => s.p1Score > 0 || s.p2Score > 0);
     if (activeSets.length === 0 || !opponentId) return;
     
-    const { result } = await submitMatch(user.id, opponentId, activeSets);
+    const { result } = await submitMatch(user.id, opponentId, activeSets, tournamentId);
     setModalResult(result);
   };
 
@@ -56,8 +62,8 @@ export default function AddMatchPage() {
     <PageTransition>
       <div className="page stack-lg">
         <div className="page-header">
-          <h1 className="page-title">Record Match</h1>
-          <div className="page-subtitle">Submit scores for today's session</div>
+          <h1 className="page-title">{tournament ? `Record ${tournament.name} Match` : 'Record Match'}</h1>
+          <div className="page-subtitle">{tournament ? 'Submit tournament sets' : 'Submit scores for today\'s session'}</div>
         </div>
 
         <div className="card stack-sm border-gold">

@@ -12,10 +12,11 @@ export default function StatsPage() {
   if (!userStats) return (
     <PageTransition>
       <div className="page stack-xl">
-        <div className="page-header">
+        <div className="page-header stack-xs">
           <h1 className="page-title">Statistics</h1>
+          <div className="page-subtitle">Your analytical performance</div>
         </div>
-        <div className="text-secondary">No stats available yet. Play a match to generate stats.</div>
+        <div className="text-secondary text-center" style={{ padding: '32px 0' }}>No stats available yet.<br/>Play a match to generate stats.</div>
       </div>
     </PageTransition>
   );
@@ -29,8 +30,9 @@ export default function StatsPage() {
   return (
     <PageTransition>
       <div className="page stack-xl">
-        <div className="page-header">
+        <div className="page-header stack-xs">
           <h1 className="page-title">Statistics</h1>
+          <div className="page-subtitle">Your analytical performance</div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

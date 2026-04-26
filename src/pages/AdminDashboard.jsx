@@ -5,7 +5,7 @@ import GlowEffect from '../components/GlowEffect.jsx';
 import { Check, X, Shield, Users, Trophy, AlertTriangle } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const { users, approveUser, rejectUser, banUser, updateUserRole, pendingMatches, verifyMatch } = useLeague();
+  const { users, approveUser, rejectUser, banUser, updateUserRole, updateUserMetadata, deleteUser, pendingMatches, verifyMatch } = useLeague();
   const [activeTab, setActiveTab] = useState('memberships');
 
   const pendingUsers = Object.values(users).filter(u => u.status === 'pending');
@@ -79,10 +79,23 @@ export default function AdminDashboard() {
                       <div className="text-xs text-secondary">@{u.username}</div>
                     </div>
                   </div>
-                  <div className="row" style={{ gap: 8 }}>
+                  <div className="row" style={{ gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    <label className="row" style={{ gap: 4, fontSize: '12px', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={u.showOnLeaderboard !== false} onChange={(e) => updateUserMetadata(u.id, { showOnLeaderboard: e.target.checked })} />
+                      Show on Leaderboard
+                    </label>
+                    <label className="row" style={{ gap: 4, fontSize: '12px', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={u.isTestAccount === true} onChange={(e) => updateUserMetadata(u.id, { isTestAccount: e.target.checked })} />
+                      Test User
+                    </label>
                     <button className="btn btn-ghost btn-sm" onClick={() => updateUserRole(u.id, !u.isAdmin)}>
-                      {u.isAdmin ? 'Remove Admin' : 'Make Admin'}
+                      {u.isAdmin ? '- Admin' : '+ Admin'}
                     </button>
+                    {u.isTestAccount && (
+                      <button className="btn btn-danger btn-sm" onClick={() => { if(confirm('Delete test user?')) deleteUser(u.id); }}>
+                        Delete
+                      </button>
+                    )}
                     <button className="btn btn-danger btn-sm" onClick={() => banUser(u.id)}>
                       Ban
                     </button>

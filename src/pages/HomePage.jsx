@@ -12,7 +12,7 @@ export default function HomePage() {
   const { user } = useAuth();
   const { getRankings, stats, notifications, pendingMatches, verifyMatch, users } = useLeague();
   
-  const rankings = getRankings();
+  const rankings = useMemo(() => getRankings(), [getRankings]);
   const userStats = stats[user?.id];
   
   const opponentId = rankings.find(r => r.id !== user?.id)?.id;

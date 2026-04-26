@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageTransition from '../components/PageTransition.jsx';
 import TournamentCard from '../components/TournamentCard.jsx';
 import ConfettiOverlay from '../components/ConfettiOverlay.jsx';
@@ -7,11 +8,11 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 
 export default function TournamentsPage() {
   const { user } = useAuth();
-  const { tournaments, createTournament, completeTournament, users } = useLeague();
+  const { tournaments, createTournament, users } = useLeague();
   const [showCreate, setShowCreate] = useState(false);
-  const [newTName, setNewTName] = useState('Ladder Open');
+  const [newTName, setNewTName] = useState('Gardenia Open');
   const [newTFormat, setNewTFormat] = useState('bo3');
-  const [justWon, setJustWon] = useState(false);
+  const navigate = useNavigate();
 
   const activeTournaments = tournaments.filter(t => t.status === 'active');
   const pastTournaments = tournaments.filter(t => t.status === 'completed').sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
@@ -22,18 +23,8 @@ export default function TournamentsPage() {
     setShowCreate(false);
   };
 
-  const handleSimulateWin = (tId) => {
-    const t = tournaments.find(x => x.id === tId);
-    if (!t) return;
-    
-    // Pick first opponent that isn't the current user
-    const oppId = t.players.find(id => id !== user.id) || user.id;
-    
-    completeTournament(tId, user.id, oppId, [
-      { p1Score: 6, p2Score: 4 }, { p1Score: 7, p2Score: 5 }
-    ]);
-    setJustWon(true);
-    setTimeout(() => setJustWon(false), 5000);
+  const handleRecordMatch = (tId) => {
+    navigate(`/match?tournament=${tId}`);
   };
 
   const getPlayer = (id) => users[id];
@@ -57,9 +48,8 @@ export default function TournamentsPage() {
             <div className="stack-sm">
               <label className="input-label">Tournament Name</label>
               <select className="input" value={newTName} onChange={e => setNewTName(e.target.value)}>
-                <option value="Ladder Open">Ladder Open</option>
+                <option value="Gardenia Open">Gardenia Open</option>
                 <option value="Concorand Garros">Concorand Garros</option>
-                <option value="Winter Classic">Winter Classic</option>
               </select>
             </div>
             <div className="stack-sm">
@@ -83,9 +73,9 @@ export default function TournamentsPage() {
                   <button 
                     className="btn btn-primary btn-sm" 
                     style={{ position: 'absolute', top: 16, right: 16 }}
-                    onClick={() => handleSimulateWin(t.id)}
+                    onClick={() => handleRecordMatch(t.id)}
                   >
-                    Win
+                    Record Match
                   </button>
                 )}
               </div>
@@ -104,7 +94,6 @@ export default function TournamentsPage() {
           )}
         </div>
       </div>
-      <ConfettiOverlay trigger={justWon} type="tournament" />
     </PageTransition>
   );
 }

@@ -140,11 +140,22 @@ export function LeagueProvider({ children }) {
     });
     
     return players
+      .filter(p => {
+        // Exclude pending, rejected, banned
+        if (p.status !== 'approved') return false;
+        // Exclude missing or undefined usernames
+        if (!p.username || !p.displayName || p.displayName.includes('UNDEFINED') || p.username.includes('UNDEFINED')) return false;
+        // Exclude admin and test accounts
+        if (p.isAdmin || p.isTestAccount) return false;
+        // Exclude hidden users
+        if (p.showOnLeaderboard === false) return false;
+        return true;
+      })
       .sort((a, b) => b.rating - a.rating)
       .map((p, i) => ({ ...p, rank: i + 1 }));
   }, [league, users]);
 
-  const submitMatch = useCallback(async (currentUserId, opponentId, sets) => {
+  const submitMatch = useCallback(async (currentUserId, opponentId, sets, tournamentId = null) => {
     const allSets = sets.map(s => ({
       ...s,
       completed: isValidCompletedSet(s.p1Score, s.p2Score),
@@ -163,10 +174,14 @@ export function LeagueProvider({ children }) {
       sessionWinner: result.sessionWinner === 'p1' ? currentUserId :
         result.sessionWinner === 'p2' ? opponentId : null,
       verified: false,
-      ratingChanges: {
+      ratingChanges: tournamentId ? {
+        [currentUserId]: result.sessionWinner === 'p1' ? 50 : result.sessionWinner === 'p2' ? -50 : 0,
+        [opponentId]: result.sessionWinner === 'p2' ? 50 : result.sessionWinner === 'p1' ? -50 : 0,
+      } : {
         [currentUserId]: result.p1Change,
         [opponentId]: result.p2Change,
       },
+      tournamentId: tournamentId || null,
       date: serverTimestamp(),
       status: 'pending_verification',
     });
@@ -215,6 +230,38 @@ export function LeagueProvider({ children }) {
         [`members.${p2Id}.rating`]: p2Data.rating + p2Change,
         [`members.${p2Id}.lastChange`]: p2Change,
       });
+
+      if (match.tournamentId) {
+        const tRef = doc(db, 'tournaments', match.tournamentId);
+        const sessionWinnerId = match.sessionWinner;
+        if (sessionWinnerId) {
+          batch.update(tRef, {
+            status: 'completed',
+            winner: sessionWinnerId,
+            sets: match.sets,
+            completedAt: serverTimestamp()
+          });
+
+          // Create trophy
+          const tournament = tournaments.find(t => t.id === match.tournamentId);
+          const trRef = doc(collection(db, 'trophies'));
+          batch.set(trRef, {
+            userId: sessionWinnerId,
+            leagueId: LEAGUE_ID,
+            tournamentId: match.tournamentId,
+            tournamentName: tournament?.name || 'Tournament',
+            dateWon: serverTimestamp(),
+            opponent: users[sessionWinnerId === p1Id ? p2Id : p1Id]?.displayName || 'Opponent',
+            finalScore: match.sets.map(s => `${s.p1Score}-${s.p2Score}`).join(', '),
+          });
+
+          const wStats = stats[sessionWinnerId] || {};
+          batch.set(doc(db, 'stats', sessionWinnerId), {
+            ...wStats,
+            tournamentWins: (wStats.tournamentWins || 0) + 1
+          }, { merge: true });
+        }
+      }
       
       // Update stats
       const result = calculateMatchRatings(match.sets);
@@ -350,11 +397,25 @@ export function LeagueProvider({ children }) {
     await updateDoc(doc(db, 'users', userId), { isAdmin });
   }, []);
 
+  const updateUserMetadata = useCallback(async (userId, data) => {
+    await updateDoc(doc(db, 'users', userId), data);
+  }, []);
+
+  const deleteUser = useCallback(async (userId) => {
+    // Basic delete for test users
+    const batch = writeBatch(db);
+    batch.delete(doc(db, 'users', userId));
+    batch.update(doc(db, 'leagues', LEAGUE_ID), {
+      [`members.${userId}`]: null
+    });
+    await batch.commit();
+  }, []);
+
   return (
     <LeagueContext.Provider value={{
       league, users, matches, tournaments, stats, trophies, notifications, pendingMatches,
       getRankings, submitMatch, verifyMatch, completeTournament, createTournament,
-      getUserNotifications, approveUser, rejectUser, banUser, updateUserRole
+      getUserNotifications, approveUser, rejectUser, banUser, updateUserRole, updateUserMetadata, deleteUser
     }}>
       {children}
     </LeagueContext.Provider>

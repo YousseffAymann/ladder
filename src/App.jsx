@@ -1,15 +1,16 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from './contexts/AuthContext.jsx';
 import Layout from './components/Layout.jsx';
-import HomePage from './pages/HomePage.jsx';
-import AddMatchPage from './pages/AddMatchPage.jsx';
-import StatsPage from './pages/StatsPage.jsx';
-import TournamentsPage from './pages/TournamentsPage.jsx';
-import TrophyCasePage from './pages/TrophyCasePage.jsx';
-import LoginPage from './pages/LoginPage.jsx';
-import AdminDashboard from './pages/AdminDashboard.jsx';
+
+const HomePage = lazy(() => import('./pages/HomePage.jsx'));
+const AddMatchPage = lazy(() => import('./pages/AddMatchPage.jsx'));
+const StatsPage = lazy(() => import('./pages/StatsPage.jsx'));
+const TournamentsPage = lazy(() => import('./pages/TournamentsPage.jsx'));
+const TrophyCasePage = lazy(() => import('./pages/TrophyCasePage.jsx'));
+const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard.jsx'));
 
 function RequireAuth({ children }) {
   const { user, loading, signOut } = useAuth();
@@ -71,21 +72,23 @@ export default function App() {
 
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/login" element={<LoginPage />} />
-        
-        <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-        
-        <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>
-          <Route index element={<HomePage />} />
-          <Route path="match" element={<AddMatchPage />} />
-          <Route path="stats" element={<StatsPage />} />
-          <Route path="tournaments" element={<TournamentsPage />} />
-          <Route path="trophies" element={<TrophyCasePage />} />
-        </Route>
-        
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+      <Suspense fallback={<div className="page center text-gold">Loading...</div>}>
+        <Routes location={location} key={location.pathname}>
+          <Route path="/login" element={<LoginPage />} />
+          
+          <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+          
+          <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>
+            <Route index element={<HomePage />} />
+            <Route path="match" element={<AddMatchPage />} />
+            <Route path="stats" element={<StatsPage />} />
+            <Route path="tournaments" element={<TournamentsPage />} />
+            <Route path="trophies" element={<TrophyCasePage />} />
+          </Route>
+          
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Suspense>
     </AnimatePresence>
   );
 }
