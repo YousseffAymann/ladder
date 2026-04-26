@@ -28,5 +28,11 @@ export function getCelebrationMessage(label, change) {
   if (label === 'STRONG WIN') return { title: 'STRONG WIN', subtitle: `+${change} IMPRESSIVE` };
   if (label === 'SOLID WIN') return { title: 'SOLID WIN', subtitle: `+${change} WELL PLAYED` };
   if (label === 'TIGHT WIN') return { title: 'TIGHT WIN', subtitle: `+${change} BATTLE WON` };
+
+  if (label === 'CRUSHING DEFEAT') return { title: 'HEARTBREAKING', subtitle: `-${change} DEVASTATING LOSS` };
+  if (label === 'HEAVY DEFEAT') return { title: 'TOUGH LOSS', subtitle: `-${change} HARD MATCH` };
+  if (label === 'TOUGH LOSS') return { title: 'TOUGH LOSS', subtitle: `-${change} WELL FOUGHT` };
+  if (label === 'HEARTBREAKING DEFEAT') return { title: 'CLOSE DEFEAT', subtitle: `-${change} SO CLOSE` };
+
   return { title: 'MATCH LOGGED', subtitle: 'Session recorded' };
 }

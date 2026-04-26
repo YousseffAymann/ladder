@@ -31,6 +31,10 @@ export default function AddMatchPage() {
 
   const opponent = users[opponentId];
 
+  const today = new Date().toISOString().split('T')[0];
+  const nowTime = new Date().toTimeString().substring(0, 5);
+  const [matchDate, setMatchDate] = useState(today);
+  const [matchTime, setMatchTime] = useState(nowTime);
   const [sets, setSets] = useState([{ p1Score: 0, p2Score: 0 }]);
   const [modalResult, setModalResult] = useState(null);
 
@@ -47,7 +51,8 @@ export default function AddMatchPage() {
     const activeSets = sets.filter(s => s.p1Score > 0 || s.p2Score > 0);
     if (activeSets.length === 0 || !opponentId) return;
     
-    const { result } = await submitMatch(user.id, opponentId, activeSets, tournamentId);
+    const matchDateTime = new Date(`${matchDate}T${matchTime}`);
+    const { result } = await submitMatch(user.id, opponentId, activeSets, tournamentId, matchDateTime);
     setModalResult(result);
   };
 
@@ -78,6 +83,22 @@ export default function AddMatchPage() {
               <option key={id} value={id}>{users[id]?.displayName} (@{users[id]?.username})</option>
             ))}
           </select>
+          
+          <label className="input-label" style={{ marginTop: 16 }}>Match Date</label>
+          <input 
+            type="date" 
+            className="input" 
+            value={matchDate} 
+            onChange={(e) => setMatchDate(e.target.value)} 
+          />
+          
+          <label className="input-label" style={{ marginTop: 16 }}>Match Time</label>
+          <input 
+            type="time" 
+            className="input" 
+            value={matchTime} 
+            onChange={(e) => setMatchTime(e.target.value)} 
+          />
         </div>
 
         {opponentId && (

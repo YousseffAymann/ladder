@@ -48,8 +48,9 @@ export function AuthProvider({ children }) {
     const uid = cred.user.uid;
     
     // Generate initials from displayName
-    const parts = displayName.split(' ');
-    const initials = parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : parts[0].substring(0, 2);
+    const trimmedName = displayName.trim();
+    const parts = trimmedName.split(/\\s+/);
+    const initials = parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : parts[0][0];
 
     const userData = {
       email,

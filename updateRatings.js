@@ -33,13 +33,13 @@ async function addMatchAndFix() {
 
   console.log('Found Ayman:', aymanId, 'Bonole:', bonoleId);
 
-  const matchId = `m-historical-1`;
-  const date = new Date('2026-04-25T12:00:00Z');
+  const matchId = `m-historical-1-fixed`;
+  const date = new Date('2026-04-25T19:30:00');
 
   const sets = [
-    { p1Score: 6, p2Score: 0, completed: true },
-    { p1Score: 6, p2Score: 4, completed: true },
-    { p1Score: 6, p2Score: 7, completed: true }, // 7-6 loss for Ayman means 6-7 from his perspective
+    { p1Score: 6, p2Score: 0, completed: true, change: 25, label: 'DOMINANT WIN', winner: 'p1' },
+    { p1Score: 6, p2Score: 4, completed: true, change: 12, label: 'SOLID WIN', winner: 'p1' },
+    { p1Score: 6, p2Score: 7, completed: true, change: -8, label: 'HEARTBREAKING DEFEAT', winner: 'p2' },
   ];
 
   const batch = writeBatch(db);
@@ -53,8 +53,8 @@ async function addMatchAndFix() {
     verified: true,
     status: 'confirmed',
     ratingChanges: {
-      [aymanId]: 39, // 25 + 12 - 8 + 10
-      [bonoleId]: -39 // -25 - 12 + 8 - 10
+      [aymanId]: 39, 
+      [bonoleId]: -39 
     },
     date: date
   });

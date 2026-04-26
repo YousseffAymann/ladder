@@ -1,9 +1,9 @@
 // Ranking calculation engine
 const SCORE_RATINGS = [
-  { check: (w, l) => (w === 6 && l <= 1), points: 25, label: 'DOMINANT WIN' },
-  { check: (w, l) => (w === 6 && (l === 2 || l === 3)), points: 18, label: 'STRONG WIN' },
-  { check: (w, l) => (w === 6 && l === 4), points: 12, label: 'SOLID WIN' },
-  { check: (w, l) => (w === 7 && (l === 5 || l === 6)), points: 8, label: 'TIGHT WIN' },
+  { check: (w, l) => (w === 6 && l <= 1), points: 25, winLabel: 'DOMINANT WIN', lossLabel: 'CRUSHING DEFEAT' },
+  { check: (w, l) => (w === 6 && (l === 2 || l === 3)), points: 18, winLabel: 'STRONG WIN', lossLabel: 'HEAVY DEFEAT' },
+  { check: (w, l) => (w === 6 && l === 4), points: 12, winLabel: 'SOLID WIN', lossLabel: 'TOUGH LOSS' },
+  { check: (w, l) => (w === 7 && (l === 5 || l === 6)), points: 8, winLabel: 'TIGHT WIN', lossLabel: 'HEARTBREAKING DEFEAT' },
 ];
 
 const SESSION_BONUS = 10;
@@ -11,9 +11,9 @@ const TOURNAMENT_BONUS = 50;
 
 export function getSetRatingChange(winnerScore, loserScore) {
   for (const sr of SCORE_RATINGS) {
-    if (sr.check(winnerScore, loserScore)) return { points: sr.points, label: sr.label };
+    if (sr.check(winnerScore, loserScore)) return { points: sr.points, winLabel: sr.winLabel, lossLabel: sr.lossLabel };
   }
-  return { points: 0, label: 'INCOMPLETE' };
+  return { points: 0, winLabel: 'INCOMPLETE', lossLabel: 'INCOMPLETE' };
 }
 
 export function calculateMatchRatings(sets) {
@@ -27,12 +27,14 @@ export function calculateMatchRatings(sets) {
       continue;
     }
     const p1Won = p1Score > p2Score;
-    const { points, label } = getSetRatingChange(
+    const { points, winLabel, lossLabel } = getSetRatingChange(
       Math.max(p1Score, p2Score), Math.min(p1Score, p2Score)
     );
+    const label = p1Won ? winLabel : lossLabel;
+
     if (p1Won) { p1Total += points; p2Total -= points; p1SetsWon++; }
     else { p2Total += points; p1Total -= points; p2SetsWon++; }
-    details.push({ ...set, change: points, label, winner: p1Won ? 'p1' : 'p2' });
+    details.push({ ...set, change: p1Won ? points : -points, label, winner: p1Won ? 'p1' : 'p2' });
   }
 
   // Session bonus

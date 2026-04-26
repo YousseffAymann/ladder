@@ -136,15 +136,22 @@ export function LeagueProvider({ children }) {
     
     const players = Object.entries(league.members).map(([id, data]) => {
       const u = users[id] || {};
-      return { id, ...u, ...data };
+      let initials = u.initials;
+      if (initials && initials.includes('UNDEFINED')) {
+        const trimmed = (u.displayName || '').trim();
+        const parts = trimmed.split(/\\s+/);
+        initials = parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : (parts[0] ? parts[0][0] : '?');
+        if (initials) initials = initials.toUpperCase();
+      }
+      return { id, ...u, ...data, initials };
     });
     
     return players
       .filter(p => {
         // Exclude pending, rejected, banned
         if (p.status !== 'approved') return false;
-        // Exclude missing or undefined usernames
-        if (!p.username || !p.displayName || p.displayName.includes('UNDEFINED') || p.username.includes('UNDEFINED')) return false;
+        // Exclude missing usernames
+        if (!p.username || !p.displayName) return false;
         // Exclude admin and test accounts
         if (p.isAdmin || p.isTestAccount) return false;
         // Exclude hidden users
@@ -155,7 +162,7 @@ export function LeagueProvider({ children }) {
       .map((p, i) => ({ ...p, rank: i + 1 }));
   }, [league, users]);
 
-  const submitMatch = useCallback(async (currentUserId, opponentId, sets, tournamentId = null) => {
+  const submitMatch = useCallback(async (currentUserId, opponentId, sets, tournamentId = null, matchDateTime = null) => {
     const allSets = sets.map(s => ({
       ...s,
       completed: isValidCompletedSet(s.p1Score, s.p2Score),
@@ -182,7 +189,7 @@ export function LeagueProvider({ children }) {
         [opponentId]: result.p2Change,
       },
       tournamentId: tournamentId || null,
-      date: serverTimestamp(),
+      date: matchDateTime || serverTimestamp(),
       status: 'pending_verification',
     });
 
