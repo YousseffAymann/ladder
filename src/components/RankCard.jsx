@@ -17,7 +17,11 @@ export default function RankCard({ player, isCurrentUser, index }) {
       
       <div className="row" style={{ gap: 16, zIndex: 1 }}>
         <div className={`rank-number ${isRank1 ? 'rank-1' : ''}`}>{player.rank}</div>
-        <div className={`avatar ${isRank1 ? 'avatar-gold' : ''}`}>{player.initials}</div>
+        {player.profileImage ? (
+          <img src={player.profileImage} alt={player.initials} className={`avatar ${isRank1 ? 'avatar-gold' : ''}`} style={{ objectFit: 'cover' }} />
+        ) : (
+          <div className={`avatar ${isRank1 ? 'avatar-gold' : ''}`}>{player.initials}</div>
+        )}
         <div className="stack-xs">
           <div className="font-bold text-base" style={{ color: isRank1 ? 'var(--gold)' : 'var(--text-primary)' }}>
             {player.displayName} {isCurrentUser && '(You)'}

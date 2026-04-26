@@ -84,21 +84,28 @@ export default function AddMatchPage() {
             ))}
           </select>
           
-          <label className="input-label" style={{ marginTop: 16 }}>Match Date</label>
-          <input 
-            type="date" 
-            className="input" 
-            value={matchDate} 
-            onChange={(e) => setMatchDate(e.target.value)} 
-          />
-          
-          <label className="input-label" style={{ marginTop: 16 }}>Match Time</label>
-          <input 
-            type="time" 
-            className="input" 
-            value={matchTime} 
-            onChange={(e) => setMatchTime(e.target.value)} 
-          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
+            <div className="stack-xs">
+              <label className="input-label">Match Date</label>
+              <input 
+                type="date" 
+                className="input" 
+                value={matchDate} 
+                onChange={(e) => setMatchDate(e.target.value)} 
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div className="stack-xs">
+              <label className="input-label">Match Time</label>
+              <input 
+                type="time" 
+                className="input" 
+                value={matchTime} 
+                onChange={(e) => setMatchTime(e.target.value)} 
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
         </div>
 
         {opponentId && (

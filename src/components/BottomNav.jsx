@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, PlusCircle, BarChart3, Trophy, Medal } from 'lucide-react';
+import { Home, PlusCircle, BarChart3, Trophy, Medal, Settings } from 'lucide-react';
 
 const tabs = [
   { to: '/', icon: Home, label: 'Rankings' },
@@ -7,6 +7,7 @@ const tabs = [
   { to: '/stats', icon: BarChart3, label: 'Stats' },
   { to: '/tournaments', icon: Trophy, label: 'Cups' },
   { to: '/trophies', icon: Medal, label: 'Trophies' },
+  { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function BottomNav() {

@@ -15,6 +15,7 @@ export default function SettingsPage() {
   const [username, setUsername] = useState(user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
   const [password, setPassword] = useState('');
+  const [profileImage, setProfileImage] = useState(user?.profileImage || '');
   
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [saving, setSaving] = useState(false);
@@ -32,7 +33,7 @@ export default function SettingsPage() {
       if (password) {
         await updatePassword(auth.currentUser, password);
       }
-      await updateUserMetadata(user.id, { displayName, username, email });
+      await updateUserMetadata(user.id, { displayName, username, email, profileImage });
       setSuccess('Profile updated successfully.');
     } catch (err) {
       setError(err.message);
@@ -61,7 +62,10 @@ export default function SettingsPage() {
           {success && <div className="text-gold text-sm">{success}</div>}
 
           <div className="stack-sm">
-            <label className="input-label">Full Name</label>
+            <label className="input-label">Profile Image URL</label>
+            <input className="input" value={profileImage} onChange={e => setProfileImage(e.target.value)} placeholder="https://..." />
+
+            <label className="input-label" style={{ marginTop: 8 }}>Full Name</label>
             <input className="input" value={displayName} onChange={e => setDisplayName(e.target.value)} />
             
             <label className="input-label" style={{ marginTop: 8 }}>Username</label>

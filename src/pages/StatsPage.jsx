@@ -107,15 +107,13 @@ export default function StatsPage() {
             <div className="text-2xl font-black">{metrics.matchWinPct.toFixed(1)}%</div>
             <div className="text-xs text-tertiary">{metrics.totalWins}W - {metrics.totalLosses}L</div>
           </div>
-          <div className="card stack-sm center text-center">
-            <Flame size={24} color={metrics.currentStreak > 2 ? 'var(--gold)' : 'var(--red)'} />
-            <div className="text-xs text-secondary">Current Streak</div>
-            <div className="text-2xl font-black">{metrics.currentStreak}</div>
-            <div className="text-xs text-tertiary">Best: {userStats.bestStreak || 0}</div>
+          <div className="card stack-sm center text-center border-gold">
+            <Target size={24} color="var(--blue)" />
+            <div className="text-xs text-secondary">Set Win %</div>
+            <div className="text-2xl font-black">{metrics.setWinPct.toFixed(1)}%</div>
+            <div className="text-xs text-tertiary">{metrics.setsWon}W - {metrics.setsLost}L</div>
           </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          
           <div className="card stack-sm center text-center">
             <TrendingUp size={24} color="var(--gold)" />
             <div className="text-xs text-secondary">Points Gained</div>
@@ -128,16 +126,12 @@ export default function StatsPage() {
             <div className="text-xl font-bold text-red">-{metrics.pointsLost}</div>
             <div className="text-xs text-tertiary">Worst: {metrics.worstLoss}</div>
           </div>
-        </div>
-
-        <div className="card stack-lg">
-          <div className="row" style={{ gap: 8 }}>
-            <Target size={20} color="var(--blue)" />
-            <span className="font-bold">Set Performance ({metrics.setWinPct.toFixed(1)}%)</span>
-          </div>
-          <div className="stack-md">
-            <StatBar label="Sets Won" value={metrics.setsWon} max={metrics.setsWon + metrics.setsLost || 1} />
-            <StatBar label="Sets Lost" value={metrics.setsLost} max={metrics.setsWon + metrics.setsLost || 1} />
+          
+          <div className="card stack-sm center text-center" style={{ gridColumn: '1 / -1' }}>
+            <Flame size={24} color={metrics.currentStreak > 2 ? 'var(--gold)' : 'var(--red)'} />
+            <div className="text-xs text-secondary">Current Streak</div>
+            <div className="text-2xl font-black">{metrics.currentStreak}</div>
+            <div className="text-xs text-tertiary">Best Streak: {userStats.bestStreak || 0}</div>
           </div>
         </div>
 
