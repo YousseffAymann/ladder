@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { db } from '../config/firebase.js';
 import { 
   collection, doc, onSnapshot, setDoc, updateDoc, 
-  query, where, writeBatch, serverTimestamp, getDocs, getDoc 
+  query, where, writeBatch, serverTimestamp, getDocs, getDoc, increment
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext.jsx';
 import { calculateMatchRatings } from '../utils/ranking.js';
@@ -206,13 +206,10 @@ export function LeagueProvider({ children }) {
       const p1Change = match.ratingChanges[p1Id] || 0;
       const p2Change = match.ratingChanges[p2Id] || 0;
 
-      const p1Data = league.members[p1Id] || { rating: 1000 };
-      const p2Data = league.members[p2Id] || { rating: 1000 };
-
       batch.update(doc(db, 'leagues', LEAGUE_ID), {
-        [`members.${p1Id}.rating`]: p1Data.rating + p1Change,
+        [`members.${p1Id}.rating`]: increment(p1Change),
         [`members.${p1Id}.lastChange`]: p1Change,
-        [`members.${p2Id}.rating`]: p2Data.rating + p2Change,
+        [`members.${p2Id}.rating`]: increment(p2Change),
         [`members.${p2Id}.lastChange`]: p2Change,
       });
 
@@ -316,13 +313,10 @@ export function LeagueProvider({ children }) {
       completedAt: serverTimestamp()
     });
 
-    const wData = league.members[winnerId] || { rating: 1000 };
-    const lData = league.members[loserId] || { rating: 1000 };
-
     batch.update(doc(db, 'leagues', LEAGUE_ID), {
-      [`members.${winnerId}.rating`]: wData.rating + 50,
+      [`members.${winnerId}.rating`]: increment(50),
       [`members.${winnerId}.lastChange`]: 50,
-      [`members.${loserId}.rating`]: lData.rating - 50,
+      [`members.${loserId}.rating`]: increment(-50),
       [`members.${loserId}.lastChange`]: -50,
     });
 
