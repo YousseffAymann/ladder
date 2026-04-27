@@ -108,28 +108,6 @@ export function LeagueProvider({ children }) {
     };
   }, [user]);
 
-  // Make sure new users get a default rating when they load
-  useEffect(() => {
-    if (!user || loading || !league.id) return;
-    
-    // Add current user to league if missing
-    if (!league.members || !league.members[user.id]) {
-      const update = async () => {
-        const lRef = doc(db, 'leagues', LEAGUE_ID);
-        await setDoc(lRef, {
-          members: {
-            [user.id]: { rating: 1000, lastChange: 0, rank: 0 } // Rank calculated dynamically below
-          }
-        }, { merge: true });
-        
-        const sRef = doc(db, 'stats', user.id);
-        await setDoc(sRef, {
-          totalSetsWon: 0, totalSetsLost: 0, winRate: 0, winStreak: 0, bestStreak: 0, headToHead: {}
-        }, { merge: true });
-      };
-      update();
-    }
-  }, [user, league, loading]);
 
   const getRankings = useCallback(() => {
     if (!league || !league.members) return [];
@@ -418,11 +396,23 @@ export function LeagueProvider({ children }) {
     await batch.commit();
   }, []);
 
+  const deleteMatch = useCallback(async (matchId) => {
+    const batch = writeBatch(db);
+    batch.delete(doc(db, 'matches', matchId));
+    
+    const notifsToUpdate = notifications.filter(n => n.matchId === matchId);
+    for (const n of notifsToUpdate) {
+      batch.delete(doc(db, 'notifications', n.id));
+    }
+    
+    await batch.commit();
+  }, [notifications]);
+
   return (
     <LeagueContext.Provider value={{
       league, users, matches, tournaments, stats, trophies, notifications, pendingMatches,
       getRankings, submitMatch, verifyMatch, completeTournament, createTournament,
-      getUserNotifications, approveUser, rejectUser, banUser, updateUserRole, updateUserMetadata, deleteUser
+      getUserNotifications, approveUser, rejectUser, banUser, updateUserRole, updateUserMetadata, deleteUser, deleteMatch
     }}>
       {children}
     </LeagueContext.Provider>

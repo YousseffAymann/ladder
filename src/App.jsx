@@ -13,6 +13,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard.jsx'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage.jsx'));
 const MatchHistoryPage = lazy(() => import('./pages/MatchHistoryPage.jsx'));
+const PendingMatchesPage = lazy(() => import('./pages/PendingMatchesPage.jsx'));
 
 function RequireAuth({ children }) {
   const { user, loading, signOut } = useAuth();
@@ -87,6 +88,7 @@ export default function App() {
             <Route path="tournaments" element={<TournamentsPage />} />
             <Route path="trophies" element={<TrophyCasePage />} />
             <Route path="history" element={<MatchHistoryPage />} />
+            <Route path="pending" element={<PendingMatchesPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
           

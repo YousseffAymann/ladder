@@ -52,6 +52,11 @@ export default function AddMatchPage() {
     if (activeSets.length === 0 || !opponentId) return;
     
     const matchDateTime = new Date(`${matchDate}T${matchTime}`);
+    if (matchDateTime > new Date()) {
+      alert("You cannot log a match in the future.");
+      return;
+    }
+
     const { result } = await submitMatch(user.id, opponentId, activeSets, tournamentId, matchDateTime);
     setModalResult(result);
   };
@@ -84,26 +89,29 @@ export default function AddMatchPage() {
             ))}
           </select>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
-            <div className="stack-xs">
-              <label className="input-label">Match Date</label>
-              <input 
-                type="date" 
-                className="input" 
-                value={matchDate} 
-                onChange={(e) => setMatchDate(e.target.value)} 
-                style={{ width: '100%' }}
-              />
-            </div>
-            <div className="stack-xs">
-              <label className="input-label">Match Time</label>
-              <input 
-                type="time" 
-                className="input" 
-                value={matchTime} 
-                onChange={(e) => setMatchTime(e.target.value)} 
-                style={{ width: '100%' }}
-              />
+          <div style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', padding: 12, marginTop: 16, border: '1px solid var(--border-subtle)' }}>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <div className="stack-xs" style={{ flex: 1, minWidth: 130 }}>
+                <label className="input-label" style={{ marginBottom: 2 }}>Match Date</label>
+                <input 
+                  type="date" 
+                  className="input" 
+                  value={matchDate} 
+                  max={today}
+                  onChange={(e) => setMatchDate(e.target.value)} 
+                  style={{ padding: '8px 12px', fontSize: '0.875rem', height: '40px' }}
+                />
+              </div>
+              <div className="stack-xs" style={{ flex: 1, minWidth: 130 }}>
+                <label className="input-label" style={{ marginBottom: 2 }}>Match Time</label>
+                <input 
+                  type="time" 
+                  className="input" 
+                  value={matchTime} 
+                  onChange={(e) => setMatchTime(e.target.value)} 
+                  style={{ padding: '8px 12px', fontSize: '0.875rem', height: '40px' }}
+                />
+              </div>
             </div>
           </div>
         </div>

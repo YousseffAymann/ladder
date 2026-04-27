@@ -2,11 +2,17 @@ import { useMemo } from 'react';
 import PageTransition from '../components/PageTransition.jsx';
 import { useLeague } from '../contexts/LeagueContext.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
-import { Calendar, Clock, Trophy, TrendingUp, TrendingDown } from 'lucide-react';
+import { Calendar, Clock, Trophy, TrendingUp, TrendingDown, Clock3 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function MatchHistoryPage() {
   const { user } = useAuth();
-  const { matches, users, tournaments } = useLeague();
+  const { matches, users, tournaments, pendingMatches } = useLeague();
+
+  const pendingCount = useMemo(() => {
+    if (!user) return 0;
+    return pendingMatches.filter(m => m.player1Id === user.id).length;
+  }, [pendingMatches, user]);
 
   const userMatches = useMemo(() => {
     if (!user) return [];
@@ -18,9 +24,16 @@ export default function MatchHistoryPage() {
   return (
     <PageTransition>
       <div className="page stack-xl">
-        <div className="page-header stack-xs">
-          <h1 className="page-title">Match History</h1>
-          <div className="page-subtitle">Your competitive timeline</div>
+        <div className="row-between">
+          <div className="page-header stack-xs">
+            <h1 className="page-title">Match History</h1>
+            <div className="page-subtitle">Your competitive timeline</div>
+          </div>
+          {pendingCount > 0 && (
+            <Link to="/pending" className="btn btn-secondary btn-sm row" style={{ gap: 6, borderColor: 'var(--blue)', color: 'var(--blue)' }}>
+              <Clock3 size={14} /> Pending ({pendingCount})
+            </Link>
+          )}
         </div>
 
         <div className="stack-md">
