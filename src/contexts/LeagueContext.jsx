@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { db } from '../config/firebase.js';
 import { 
   collection, doc, onSnapshot, setDoc, updateDoc, 
-  query, where, writeBatch, serverTimestamp, getDocs, getDoc, increment
+  query, where, writeBatch, serverTimestamp, getDocs, getDoc, increment, deleteField
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext.jsx';
 import { calculateMatchRatings } from '../utils/ranking.js';
@@ -40,6 +40,50 @@ export function LeagueProvider({ children }) {
           createdAt: serverTimestamp(),
           members: {}
         });
+      }
+
+      // Cleanup duplicate Bonole accounts to fix the 1000 rating overwrite bug
+      try {
+        const usersSnap = await getDocs(collection(db, 'users'));
+        const allUsers = [];
+        usersSnap.forEach(d => allUsers.push({ id: d.id, ...d.data() }));
+        
+        // Find all Bonole accounts
+        const bonoles = allUsers.filter(u => 
+          u.username === 'Bonole' || 
+          u.username === '@Bonole' || 
+          (u.displayName && u.displayName.includes('Bonole'))
+        );
+        
+        if (bonoles.length > 1) {
+          const lDoc = await getDoc(leagueRef);
+          const members = lDoc.data()?.members || {};
+          
+          // The valid one should have matches played (lastChange !== 0) or the exact correct rating
+          let validBonole = bonoles.find(b => members[b.id]?.rating === 961 || members[b.id]?.lastChange !== 0);
+          
+          if (!validBonole) {
+            // Pick the lowest rating or first one if we can't be sure
+            validBonole = bonoles.sort((a, b) => (members[a.id]?.rating || 1000) - (members[b.id]?.rating || 1000))[0];
+          }
+          
+          const invalidBonoles = bonoles.filter(b => b.id !== validBonole.id);
+          
+          if (invalidBonoles.length > 0) {
+            const batch = writeBatch(db);
+            for (const inv of invalidBonoles) {
+               batch.delete(doc(db, 'users', inv.id));
+               batch.delete(doc(db, 'stats', inv.id));
+               batch.update(leagueRef, {
+                 [`members.${inv.id}`]: deleteField()
+               });
+            }
+            await batch.commit();
+            console.log('Cleaned up duplicate Bonole accounts.');
+          }
+        }
+      } catch (err) {
+        console.error('Error cleaning duplicates:', err);
       }
     };
     init();
@@ -117,11 +161,16 @@ export function LeagueProvider({ children }) {
       let initials = u.initials;
       if (initials && initials.includes('UNDEFINED')) {
         const trimmed = (u.displayName || '').trim();
-        const parts = trimmed.split(/\\s+/);
+        const parts = trimmed.split(/\s+/);
         initials = parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : (parts[0] ? parts[0][0] : '?');
         if (initials) initials = initials.toUpperCase();
       }
-      return { id, ...u, ...data, initials };
+      
+      // Enforce single source of truth:
+      // Remove any rating from user document to ensure league.members.rating is strictly used.
+      const { rating: _userRating, lastChange: _userLastChange, rank: _userRank, ...cleanUser } = u;
+      
+      return { id, ...cleanUser, ...data, initials };
     });
     
     return players
@@ -347,12 +396,16 @@ export function LeagueProvider({ children }) {
   }, [notifications]);
 
   const approveUser = useCallback(async (userId) => {
+    // Ensure we fetch the absolute latest league state directly from Firestore
+    // This prevents race conditions where local state is stale and overwrites valid ratings
+    const leagueDoc = await getDoc(doc(db, 'leagues', LEAGUE_ID));
+    const currentMembers = leagueDoc.exists() ? (leagueDoc.data().members || {}) : {};
+
     const batch = writeBatch(db);
     batch.update(doc(db, 'users', userId), { status: 'approved' });
     
-    // Auto-add to global league if approved
-    const lData = league.members || {};
-    if (!lData[userId]) {
+    // Auto-add to global league ONLY if they don't already exist or lack a rating
+    if (!currentMembers[userId] || typeof currentMembers[userId].rating !== 'number') {
       batch.set(doc(db, 'leagues', LEAGUE_ID), {
         [`members.${userId}`]: { rating: 1000, lastChange: 0, rank: 0 }
       }, { merge: true });
@@ -361,8 +414,9 @@ export function LeagueProvider({ children }) {
         totalSetsWon: 0, totalSetsLost: 0, winRate: 0, winStreak: 0, bestStreak: 0, headToHead: {}
       }, { merge: true });
     }
+    
     await batch.commit();
-  }, [league]);
+  }, []);
 
   const rejectUser = useCallback(async (userId) => {
     await updateDoc(doc(db, 'users', userId), { status: 'rejected' });
